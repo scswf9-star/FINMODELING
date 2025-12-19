@@ -1,0 +1,158 @@
+from alpha_vantage.timeseries import TimeSeries
+import pandas as pd
+import statsmodels.api as sm
+#create timeseries object
+av_key = 'KLW0M02ONLBORTIN'
+ts = TimeSeries(key=av_key, output_format='pandas')
+#pull in data for a stock
+stock_tickler = 'MSFT'
+df,md = ts.get_daily(symbol=stock_tickler, outputsize='compact')
+#display value stored in variable for the tickler symbol
+print('Q U E S T I O N 1')
+print(f"Data for stock ticker: {stock_tickler}")
+print()
+print('Q U E S T I O N 2')
+print()
+#display the first 5 rows of the dataframe
+print(f'"First 5 rows of data for {stock_tickler}:"')
+print(df.head())
+print()
+#display the last 5 rows of the dataframe
+print(f'"Last 5 rows of data for {stock_tickler}:"')
+print(df.tail())
+print()
+print('Q U E S T I O N 3')
+print()
+#display mean and round to three decimal places and label by concatenating the text
+print(f"Mean closing price: {round(df['4. close'].mean(), 3)}")
+#display standard deviation and round to three decimal places and label by
+concatenating the text
+print(f"Standard deviation of closing price: {round(df['4. close'].std(), 3)}")
+#display minimum value and round to three decimal places and label by concatenating
+the text
+print(f"Minimum closing price: {round(df['4. close'].min(), 3)}")
+#display maximum value and round to three decimal places and label by concatenating
+the text
+print(f"Maximum closing price: {round(df['4. close'].max(), 3)}")
+print()
+print('Q U E S T I O N 4')
+print()
+#create a second dataframe called "stock_returns" that contains only the date and
+the return for each day(the percent change in "4.close" since the previous day),
+omitting the datas for which the return cannot be calculated
+df_sorted = df.sort_index()
+stock_returns = df_sorted[['4. close']].pct_change().dropna()
+stock_returns.rename(columns={'4. close': 'Stock Return'}, inplace=True)
+stock_returns['Date'] = stock_returns.index
+stock_returns = stock_returns[['Date', 'Stock Return']]
+
+
+print()
+print('Q U E S T I O N 5')
+print()
+#display the first 5 rows of the stock_returns dataframe
+print(f'"First 5 rows of stock returns for {stock_tickler}:"')
+print(stock_returns.head())
+#display the last 5 rows of the stock_returns dataframe
+print(f'Last 5 rows of stock returns for {stock_tickler}:"')
+print(stock_returns.tail())
+#rename the column in stock_returns to "Returns"
+stock_returns.rename(columns={'4. close': 'Stock Return'}, inplace=True)
+#display the first 5 rowns in the stock_returns dataframe sorted by the "Stock
+Return" column from high to low
+print(f'First 5 rows of stock returns sorted (from high to low) by return for
+{stock_tickler}:"')
+print(stock_returns.sort_values(by='Stock Return', ascending=False).head())
+#display the last 5 rows in the stock_returns dataframe sorted by the "Stock
+Return" column from to high to low
+print(f'First 5 rows of stock returns sorted (from high to low) by return for
+{stock_tickler}:"')
+print(stock_returns.sort_values(by='Stock Return', ascending=False).tail())
+print()
+
+print('Q U E S T I O N 6')
+print(f'STATISTICAL DESCRIPTION OF STOCK RETURN TICKLER: {stock_tickler}:')
+print()
+#display the mean of the "Stock Return" column rounded to six decimal places and
+labeled by concatenating the text
+print(f"Mean stock return: {round(stock_returns['Stock Return'].mean(), 6)}")
+#display the median of the "Stock Return" column rounded to six decimal places and
+labeled by concatenating the text
+print(f"Median stock return: {round(stock_returns['Stock Return'].median(), 6)}")
+
+#display the variance of the "Stock Return" column rounded to six decimal places
+and labeled by concatenating the text
+print(f"Variance of stock return: {round(stock_returns['Stock Return'].var(), 6)}")
+
+#display the standard deviation of the "Stock Return" column rounded to six decimal
+places and labeled by concatenating the text
+print(f"Standard deviation of stock return: {round(stock_returns['Stock Return'].std(), 6)}")
+
+#display the maximum value of the "Stock Return" column rounded to six decimal
+places and labeled by concatenating the text
+print(f"Maximum stock return: {round(stock_returns['Stock Return'].max(), 6)}")
+
+#display the minimum value of the "Stock Return" column rounded to six decimal
+places and labeled by concatenating the text
+print(f"Minimum stock return: {round(stock_returns['Stock Return'].min(), 6)}")
+
+#display the skewness of the "Stock Return" column rounded to six decimal places
+and labeled by concatenating the text
+print(f"Skewness of stock return: {round(stock_returns['Stock Return'].skew(), 6)}")
+
+#display the kurtosis of the "Stock Return" column rounded to six decimal places
+and labeled by concatenating the text
+print(f"Kurtosis of stock return: {round(stock_returns['Stock Return'].kurtosis(), 6)}")
+print()
+
+print('Q U E S T I O N 7')
+print()
+#Create a new dataframe called "mkt_returns" taht contains the date and return for
+each day for the Russell 3000 ETF, omitting the data for which the return cannot be
+calculated
+mkt_df, mkt_md = ts.get_daily(symbol='IVW', outputsize='compact')
+mkt_df_sorted = mkt_df.sort_index()
+mkt_returns = mkt_df_sorted[['4. close']].pct_change().dropna()
+mkt_returns.rename(columns={'4. close': 'Market Return'}, inplace=True)
+mkt_returns['Date'] = mkt_returns.index
+mkt_returns = mkt_returns[['Date', 'Market Return']]
+
+
+#display the first 5 rows of the mkt_returns dataframe
+print(f'"First 5 rows of market returns for IVW:"')
+print(mkt_returns.head())
+print()
+#display the last 5 rows of the mkt_returns dataframe
+print(f'"Last 5 rows of market returns for IVW:"')
+print(mkt_returns.tail())
+print()
+print('Q U E S T I O N 8')
+print()
+#run a regression using the returns for MSFT as the dependent variable and the
+returns of Russell 3000 ETF as the independent variable. Display the regression
+summary.
+reg_df = pd.merge(stock_returns, mkt_returns, on='Date', how='inner')
+X = reg_df['Market Return']
+X = sm.add_constant(X)
+y = reg_df['Stock Return']
+model = sm.OLS(y, X).fit()
+print(f'REGRESSION SUMMARY OF {stock_tickler} RETURNS AGAINST IVW RETURNS:')
+print(model.summary())
+print()
+print('Q U E S T I O N 9')
+print()
+#determine if the market coefficient is statistically significant at the 5% level
+p_value = model.pvalues['Market Return']
+if p_value < 0.05:
+  print(f"The market coefficient is statistically significant at the 5% level (p-value: {round(p_value, 6)}) which is less than the alpha of 0.05")
+else:
+  print(f"The market coefficient is not statistically significant at the 5% level (p-value: {round(p_value, 6)}) which is greater than the alpha of 0.05")
+print()
+print('Q U E S T I O N 10')
+print()
+#determine how much variation in the stock returns is explained by the market
+returns using the R-squared value
+r_squared = model.rsquared
+print(f"The R-squared value is {round(r_squared, 6)}, which means that {round(r_squared * 100, 2)}% of the variation in {stock_tickler} returns is explained by the variation in IVW returns.")
+print()
+print('End of Assignment')
